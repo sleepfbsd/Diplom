@@ -1,0 +1,3 @@
+yc compute instance update epdfi9hb1vrhgfb5fk5s \
+  --serial-port-settings ssh-authorization=INSTANCE_METADATA \
+  --metadata enable-oslogin=false,serial-port-enable=1,ssh-keys='sliscoff:ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGa3Z5Qv/An0ApgnIXCMpiwmq4dXsLwbeecSMpHKOSusYXVdsLwPirCpl9wFWdu0osHmgRk4oR5zYgRc6hjR1Wo= ecdsa-key-20251226'

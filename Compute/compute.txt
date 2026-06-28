@@ -1,0 +1,18 @@
+Создаем через Cloud CLI и не забываем включить галку OSLogin
+
+
+
+
+yc compute instance create \
+  --name mw1 \
+  --hostname mw1 \
+  --service-account-id ajevfvr795h2r9dt67ik \
+  --zone ru-central1-b \
+  --platform standard-v3 \
+  --memory 2 \
+  --cores 2 \
+  --core-fraction 100 \
+  --create-boot-disk name=fbsdmw1,type=network-ssd,size=10,block-size=4096,image-id=fd8cggscje6e68lhhh80,auto-delete=yes \
+  --network-interface subnet-id=e2l9d2tgkthr8nb29fdm,nat-ip-version=ipv4,ipv4-address=auto \
+  --preemptible=true \
+  --metadata $'user-data=#cloud-config\ndatasource:\n Ec2:\n  strict_id: false\nssh_pwauth: no\nusers:\n- name: sliscoff\n  sudo: ALL=(ALL) NOPASSWD:ALL\n  shell: /bin/bash\n  ssh_authorized_keys:\n  - ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGa3Z5Qv/An0ApgnIXCMpiwmq4dXsLwbeecSMpHKOSusYXVdsLwPirCpl9wFWdu0osHmgRk4oR5zYgRc6hjR1Wo= ecdsa-key-20251226,ssh-keys=sliscoff:ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGa3Z5Qv/An0ApgnIXCMpiwmq4dXsLwbeecSMpHKOSusYXVdsLwPirCpl9wFWdu0osHmgRk4oR5zYgRc6hjR1Wo= ecdsa-key-20251226,serial-port-enable=1'

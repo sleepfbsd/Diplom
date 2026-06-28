@@ -1,0 +1,19 @@
+# Ставим psql
+sudo apt install postgresql postgresql-contrib -y
+
+sudo -i -u postgres
+psql
+
+CREATE USER wikiuser WITH PASSWORD 'wikiuser';
+CREATE DATABASE my_wiki OWNER wikiuser; 
+GRANT ALL PRIVILEGES ON DATABASE my_wiki TO wikiuser;
+
+sudo nano /etc/postgresql/16/main/postgresql.conf
+# listen_addresses = '*'
+
+sudo nano /etc/postgresql/16/main/pg_hba.conf
+# host    mediawiki    wikiuser    IP_АДРЕС_ВЕБ_СЕРВЕРА/32    scram-sha-256
+
+sudo systemctl restart postgresql
+
+
