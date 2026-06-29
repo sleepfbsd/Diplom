@@ -1,5 +1,6 @@
 # Ставим Apache
-sudo apt install apache2 libapache2-mod-php php php-pgsql php-xml php-mbstring php-curl php-gd php-intl php-apcu -y
+sudo apt install apache2 libapache2-mod-php php php-pgsql php-xml php-mbstring php-curl php-gd php-intl php-apcu apt -y
+
 
 # Ставим MediaWiki
 wget https://releases.wikimedia.org/mediawiki/1.42/mediawiki-1.42.1.tar.gz
@@ -31,19 +32,18 @@ sudo nano /etc/apache2/sites-available/mediawiki.conf
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 
-# Включаем сайт
-
 sudo a2ensite mediawiki.conf
 sudo a2enmod rewrite
 sudo systemctl restart apache2
 
+#точка монтирования
 
-# Учетные mediawiki
+sudo mkdir -p /var/www/html/mediawiki/images
+sudo mount -t nfs 10.129.0.25:/srv/mediawiki-images /var/www/html/mediawiki/images
+sudo nano /etc/fstab
+10.129.0.25:/srv/mediawiki-images /var/www/html/mediawiki/images nfs defaults 0 0
+sudo chown -R www-data:www-data /var/www/html/mediawiki/images
 
-Название sliscofflab
+#синхронизируемся
 
-admin - fbsd
-pass - sleepwalker
-
-#
-
+sudo rsync -avz 10.127.0.21:/var/www/html/mediawiki/LocalSettings.php /var/www/html/mediawiki/

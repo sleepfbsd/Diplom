@@ -1,0 +1,24 @@
+sudo apt install nfs-kernel-server -y
+
+#Общая директория для файлов
+sudo mkdir -p /srv/mediawiki-images
+sudo chown nobody:nogroup /srv/mediawiki-images  
+sudo chmod 755 /srv/mediawiki-images
+
+# sudo nano /etc/exports
+/srv/mediawiki-images 10.127.0.0/24(rw,sync,no_subtree_check) 10.129.0.0/24(rw,sync,no_subtree_check)
+
+sudo exportfs -a
+sudo systemctl restart nfs-kernel-server
+
+#Создание резервного копирования базы sql
+
+sudo groupadd -g 113 postgres
+sudo useradd -u 113 -g 113 -m -s /bin/bash postgres
+sudo mkdir -p /srv/backups/postgresql
+sudo chown postgres:postgres /srv/backups/postgresql   
+sudo chmod 755 /srv/backups/postgresql
+
+sudo nano /etc/exports
+
+/srv/backups/postgresql 10.129.0.0/24(rw,sync,no_subtree_check)

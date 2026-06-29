@@ -1,0 +1,56 @@
+# Ставим Apache
+sudo apt install apache2 libapache2-mod-php php php-pgsql php-xml php-mbstring php-curl php-gd php-intl php-apcu -y
+
+# Ставим MediaWiki
+wget https://releases.wikimedia.org/mediawiki/1.42/mediawiki-1.42.1.tar.gz
+
+tar -xzvf mediawiki-1.42.1.tar.gz
+
+sudo mv mediawiki-1.42.1 /var/www/html/mediawiki
+
+# Ставим права
+sudo chown -R www-data:www-data /var/www/html/mediawiki
+
+sudo chmod -R 755 /var/www/html/mediawiki
+
+# Настраиваем Apache
+sudo nano /etc/apache2/sites-available/mediawiki.conf
+------
+
+<VirtualHost *:80>
+    ServerName 111.88.155.50
+    DocumentRoot /var/www/html/mediawiki
+
+    <Directory /var/www/html/mediawiki>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+# Включаем сайт
+
+sudo a2ensite mediawiki.conf
+sudo a2enmod rewrite
+sudo systemctl restart apache2
+
+
+# Учетные mediawiki
+
+Название sliscofflab
+
+admin - fbsd
+pass - sleepwalker
+
+#Донастраиваем mediawiki1
+wget https://github.com/sleepfbsd/Diplom/blob/main/MediaWiki/LocalSettings.php
+sudo mv LocalSettings.php /var/www/html/mediawiki/
+sudo chown www-data:www-data /var/www/html/mediawiki/LocalSettings.php
+sudo mkdir -p /var/www/html/mediawiki/images
+
+
+
+

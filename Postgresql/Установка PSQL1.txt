@@ -1,0 +1,105 @@
+# Ставим psql
+sudo apt install postgresql postgresql-contrib -y
+
+sudo -i -u postgres
+psql
+
+CREATE USER wikiuser WITH PASSWORD 'wikiuser';
+CREATE DATABASE my_wiki OWNER wikiuser; 
+GRANT ALL PRIVILEGES ON DATABASE my_wiki TO wikiuser;
+
+sudo nano /etc/postgresql/16/main/postgresql.conf
+# listen_addresses = '*'
+
+sudo nano /etc/postgresql/16/main/pg_hba.conf
+# host    mediawiki    wikiuser    10.127.0.21/32    scram-sha-256
+# host    mediawiki    wikiuser    10.129.0.12/32    scram-sha-256
+
+sudo systemctl restart postgresql
+
+Добавляем репликацию
+
+sudo nano /etc/postgresql/16/main/postgresql.conf
+
+
+listen_addresses = '*'          # Разрешаем подключения с любого IP
+wal_level = replica             # Уровень журнала для репликации
+max_wal_senders = 10            # Максимальное число одновременных подключений для репликации
+wal_keep_size = 128MB           # Объём WAL-логов, которые хранятся для реплик
+hot_standby = on                # Разрешаем выполнять запросы на реплике
+
+sudo nano /etc/postgresql/16/main/pg_hba.conf
+
+host    replication     replicator      10.129.0.30/32        md5
+
+sudo -u postgres psql
+
+CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD '12345678';
+
+
+sudo systemctl restart postgresql
+
+#Создаем бекапирование после подготовки на BCKP1
+
+sudo mkdir -p /mnt/backups_postgresql
+
+sudo mount -t nfs 10.129.0.25:/srv/backups/postgresql /mnt/backups_postgresql
+
+sudo nano /etc/fstab
+
+10.129.0.25:/srv/backups/postgresql /mnt/backups_postgresql nfs defaults 0 0
+
+#Создаем backup_user
+
+sudo -u postgres psql
+
+CREATE USER backup_user WITH PASSWORD '12345678';
+GRANT CONNECT ON DATABASE my_wiki TO backup_user;
+GRANT USAGE ON SCHEMA public TO backup_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO backup_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO backup_user;
+
+#Создаем скрипт бекапа
+sudo nano /usr/local/bin/pg_backup.sh
+
+#!/bin/bash
+cd /
+# Переменные
+BACKUP_DIR="/mnt/backups_postgresql"   # Смонтированная NFS-папка
+DB_NAME="my_wiki"
+DB_USER="backup_user"
+DB_HOST="localhost"
+DB_PORT="5432"
+RETENTION_DAYS=7
+
+
+DATE=$(date +%Y%m%d_%H%M%S)
+FILENAME="${BACKUP_DIR}/${DB_NAME}_${DATE}.sql.gz"
+
+export PGPASSWORD="12345678"
+
+# Выполняем дамп и сжимаем
+pg_dump -h $DB_HOST -p $DB_PORT -U $DB_USER -F p $DB_NAME | gzip > $FILENAME
+
+# Проверяем успешность
+if [ -f "$FILENAME" ]; then
+    echo "$(date): Backup of $DB_NAME completed successfully: $FILENAME" >> /var/log/pg_backup.log
+    # Удаляем файлы старше RETENTION_DAYS дней
+    find $BACKUP_DIR -type f -name "*.sql.gz" -mtime +$RETENTION_DAYS -delete
+else
+    echo "$(date): ERROR: Backup of $DB_NAME failed!" >> /var/log/pg_backup.log
+    exit 1
+fi
+
+# Очищаем переменную пароля
+unset PGPASSWORD
+
+
+#Делаем скрипт исполняемым
+sudo chmod +x /usr/local/bin/pg_backup.sh
+
+sudo crontab -u postgres -e
+
+0 2 * * * /usr/local/bin/pg_backup.sh
+
+sudo -u postgres /usr/local/bin/pg_backup.sh

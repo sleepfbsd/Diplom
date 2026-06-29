@@ -1,0 +1,10 @@
+sudo apt install postgresql postgresql-contrib -y
+
+sudo systemctl stop postgresql
+
+После добавления роли на PSQL1
+
+sudo -u postgres rm -rf /var/lib/postgresql/16/main/*
+
+
+sudo -u postgres pg_basebackup -h 10.129.0.36 -U replicator -D /var/lib/postgresql/16/main -P -R --wal-method=stream
